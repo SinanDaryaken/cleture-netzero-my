@@ -7,6 +7,7 @@ use App\Actions\IdentityAccess\RegisterOrganizationUser;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\IdentityAccess\RegisterRequest;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -22,7 +23,7 @@ class RegisteredOrganizationUserController extends Controller
         RegisterRequest $request,
         RegisterOrganizationUser $register,
     ): RedirectResponse {
-        $user = $register->handle($request->validated());
+        $user = $register->handle($request->validated(), App::currentLocale());
 
         Auth::guard('web')->login($user);
         $request->session()->regenerate();

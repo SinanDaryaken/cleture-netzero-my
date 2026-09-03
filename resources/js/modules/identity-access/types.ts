@@ -35,6 +35,15 @@ export type UiTranslations = {
         trustNote: string;
         selectLanguage: string;
     };
+    appLayout: {
+        dashboardLabel: string;
+        navigationLabel: string;
+        overview: string;
+        organization: string;
+        collapseSidebar: string;
+        expandSidebar: string;
+        logout: string;
+    };
     login: {
         headTitle: string;
         eyebrow: string;
@@ -91,7 +100,6 @@ export type UiTranslations = {
     };
     dashboard: {
         headTitle: string;
-        logout: string;
         eyebrow: string;
         title: string;
         description: string;
@@ -101,5 +109,25 @@ export type UiTranslations = {
         nextStep: string;
         organizationSetup: string;
         organizationDescription: string;
+        manageOrganization: string;
+    };
+    organization: {
+        headTitle: string;
+        backToDashboard: string;
+        eyebrow: string;
+        title: string;
+        description: string;
+        existingLabel: string;
+        newLabel: string;
+        formTitle: string;
+        name: string;
+        taxNumber: string;
+        taxNumberHint: string;
+        createSubmit: string;
+        creating: string;
+        updateSubmit: string;
+        updating: string;
+        created: string;
+        updated: string;
     };
 };

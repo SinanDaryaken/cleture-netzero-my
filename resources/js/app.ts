@@ -43,8 +43,8 @@ if (!favicon.isConnected) {
 void createInertiaApp({
     progress: { color: '#047857' },
     resolve: async (name) => {
-        const page =
-            pages[`./modules/${name.replace('identity-access/', 'identity-access/pages/')}.vue`];
+        const pagePath = `./modules/${name.replace(/\/([^/]+)$/, '/pages/$1')}.vue`;
+        const page = pages[pagePath];
 
         if (!page) {
             throw new Error(`Bilinmeyen Inertia sayfası: ${name}`);

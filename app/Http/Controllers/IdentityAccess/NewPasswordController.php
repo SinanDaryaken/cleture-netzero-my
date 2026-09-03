@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\IdentityAccess\ResetPasswordRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -30,6 +31,7 @@ class NewPasswordController extends Controller
             email: $request->string('email')->toString(),
             password: $request->string('password')->toString(),
             token: $request->string('token')->toString(),
+            locale: App::currentLocale(),
         );
 
         if ($status !== Password::PasswordReset) {

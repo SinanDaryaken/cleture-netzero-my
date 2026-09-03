@@ -581,70 +581,335 @@ h1 {
 }
 
 .app-shell {
+    display: grid;
+    min-height: 100vh;
+    min-width: 68rem;
+    grid-template-columns: 15rem minmax(0, 1fr);
+    background: #fff;
+    transition: grid-template-columns 180ms ease;
+}
+
+.app-shell-collapsed {
+    grid-template-columns: 4.75rem minmax(0, 1fr);
+}
+
+.app-sidebar {
+    position: sticky;
+    top: 0;
+    z-index: 18;
+    display: flex;
+    height: 100vh;
+    min-height: 35rem;
+    min-width: 0;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0.85rem 0.65rem 0.75rem;
+    color: #fff;
+    background:
+        radial-gradient(circle at 88% 16%, rgb(255 255 255 / 10%), transparent 10rem),
+        linear-gradient(160deg, #063f31, var(--cleture-primary-deep) 62%, #087d5f);
+}
+
+.app-sidebar::after {
+    position: absolute;
+    right: -5rem;
+    bottom: 3rem;
+    width: 13rem;
+    height: 13rem;
+    border: 1px solid rgb(255 255 255 / 9%);
+    border-radius: 50%;
+    box-shadow: -2.5rem 2rem 0 -1px rgb(255 255 255 / 4%);
+    content: '';
+    pointer-events: none;
+}
+
+.sidebar-brand-row {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    min-height: 3.8rem;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0 0.15rem 0.8rem;
+    border-bottom: 1px solid rgb(255 255 255 / 10%);
+}
+
+.app-sidebar-brand {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 auto;
+    align-items: center;
+    gap: 0.65rem;
+    border-radius: 0.75rem;
+    text-decoration: none;
+}
+
+.app-sidebar-brand .brand-logo-surface {
+    padding: 0.45rem 0.65rem;
+}
+
+.app-sidebar-brand .brand-mark img {
+    height: 2.35rem;
+}
+
+.app-sidebar-product {
+    overflow: hidden;
+    color: rgb(236 253 245 / 72%);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.09em;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.app-sidebar-brand:focus-visible {
+    outline-color: rgb(255 255 255 / 72%);
+}
+
+.sidebar-toggle.p-button,
+.app-sidebar-expand.p-button {
+    width: 1.9rem;
+    height: 1.9rem;
+    flex: 0 0 auto;
+}
+
+.sidebar-toggle.p-button {
+    color: rgb(236 253 245 / 62%);
+}
+
+.app-navigation {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    min-height: 0;
+    flex: 1 1 auto;
+    align-content: start;
+    gap: 0.45rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-top: 1rem;
+    scrollbar-color: rgb(209 250 229 / 24%) transparent;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+}
+
+.app-navigation::-webkit-scrollbar {
+    width: 0.35rem;
+}
+
+.app-navigation::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgb(209 250 229 / 24%);
+}
+
+.app-navigation::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.app-navigation-link {
+    display: flex;
+    min-height: 2.6rem;
+    min-width: 0;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 0.7rem;
+    border: 1px solid transparent;
+    border-radius: 0.65rem;
+    color: rgb(236 253 245 / 76%);
+    font-size: 0.88rem;
+    font-weight: 720;
+    text-decoration: none;
+    transition:
+        color 150ms ease,
+        background-color 150ms ease,
+        border-color 150ms ease;
+}
+
+.app-navigation-link > i {
+    width: 1.2rem;
+    flex: 0 0 auto;
+    color: rgb(236 253 245 / 64%);
+    text-align: center;
+}
+
+.app-navigation-link:hover {
+    color: #fff;
+    background: rgb(255 255 255 / 8%);
+}
+
+.app-navigation-link-active {
+    border-color: rgb(255 255 255 / 14%);
+    color: var(--cleture-primary-deep);
+    background: #fff;
+    box-shadow: 0 0.75rem 1.8rem rgb(1 49 37 / 16%);
+}
+
+.app-navigation-link-active > i,
+.app-navigation-link-active:hover {
+    color: var(--cleture-primary-deep);
+}
+
+.app-navigation-link-active:hover {
+    background: #fff;
+}
+
+.navigation-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sidebar-account {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: auto;
+    padding: 0.75rem 0.35rem 0;
+    border-top: 1px solid rgb(255 255 255 / 10%);
+}
+
+.sidebar-user-badge {
+    display: grid;
+    width: 2.15rem;
+    height: 2.15rem;
+    place-items: center;
+    border-radius: 0.6rem;
+    color: var(--cleture-primary-deep);
+    background: var(--cleture-mint);
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
+.sidebar-user-copy {
+    display: grid;
+    min-width: 0;
+    gap: 0.12rem;
+}
+
+.sidebar-user-copy strong {
+    overflow: hidden;
+    font-size: 0.72rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sidebar-user-copy span {
+    overflow: hidden;
+    color: rgb(209 250 229 / 50%);
+    font-size: 0.64rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sidebar-logout-button {
+    display: inline-grid;
+    width: 1.9rem;
+    height: 1.9rem;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    color: rgb(236 253 245 / 62%);
+    background: transparent;
+    cursor: pointer;
+}
+
+.sidebar-logout-button:hover {
+    color: #fff;
+    background: rgb(255 255 255 / 8%);
+}
+
+.app-shell-collapsed .sidebar-brand-row {
+    justify-content: center;
+    padding-inline: 0;
+}
+
+.app-shell-collapsed .app-sidebar-brand {
+    flex: 0 0 auto;
+}
+
+.app-shell-collapsed .app-sidebar-brand .brand-logo-surface {
+    padding: 0.38rem;
+}
+
+.app-shell-collapsed .app-sidebar-brand .brand-mark img {
+    width: 1.85rem;
+    height: 1.85rem;
+}
+
+.app-shell-collapsed .app-sidebar-product,
+.app-shell-collapsed .sidebar-toggle,
+.app-shell-collapsed .navigation-text,
+.app-shell-collapsed .sidebar-user-copy,
+.app-shell-collapsed .sidebar-logout-button {
+    display: none;
+}
+
+.app-shell-collapsed .app-navigation-link {
+    justify-content: center;
+    padding-inline: 0;
+}
+
+.app-shell-collapsed .sidebar-account {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    padding-inline: 0;
+}
+
+.app-frame {
+    min-width: 0;
     min-height: 100vh;
     background: #fff;
 }
 
 .app-header {
+    position: sticky;
+    z-index: 15;
+    top: 0;
     display: flex;
-    min-height: 5rem;
+    min-height: 4rem;
     align-items: center;
     justify-content: space-between;
+    gap: 1rem;
     padding: 0.8rem clamp(1rem, 3vw, 2rem);
     border-bottom: 1px solid var(--cleture-border);
+    background: rgb(255 255 255 / 94%);
+    backdrop-filter: blur(14px);
 }
 
 .app-header-actions {
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    margin-left: auto;
+}
+
+.app-locale-picker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--cleture-primary-deep);
+}
+
+.app-locale-picker > i {
+    font-size: 0.9rem;
+}
+
+.app-locale-select.p-select {
+    box-shadow: none;
 }
 
 .test-badge {
-    margin-right: 1rem;
     padding: 0.4rem 0.65rem;
     border-radius: 0.25rem;
     color: #fff;
     background: #007355;
     font-size: 0.78rem;
     font-weight: 800;
-}
-
-.user-badge {
-    display: grid;
-    width: 2.65rem;
-    height: 2.65rem;
-    place-items: center;
-    border-radius: 0.6rem;
-    color: #007355;
-    background: var(--cleture-mint);
-    font-size: 0.8rem;
-    font-weight: 750;
-}
-
-.user-copy {
-    display: grid;
-    max-width: 14rem;
-    font-size: 0.82rem;
-}
-
-.user-copy span {
-    overflow: hidden;
-    color: var(--cleture-muted);
-    text-overflow: ellipsis;
-}
-
-.logout-button {
-    display: inline-flex;
-    min-height: 2.5rem;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.5rem 0.7rem;
-    border: 1px solid var(--cleture-border);
-    border-radius: 0.5rem;
-    color: #405365;
-    background: #fff;
-    cursor: pointer;
 }
 
 .dashboard-shell {
@@ -729,6 +994,116 @@ h1 {
     background: linear-gradient(90deg, rgb(233 248 240 / 82%), transparent 58%), #fff;
 }
 
+.dashboard-card-link {
+    color: inherit;
+    text-decoration: none;
+    transition:
+        border-color 150ms ease,
+        box-shadow 150ms ease,
+        transform 150ms ease;
+}
+
+.dashboard-card-link:hover {
+    border-color: #9fd6c1;
+    box-shadow: 0 0.75rem 2rem rgb(24 71 57 / 8%);
+    transform: translateY(-0.125rem);
+}
+
+.dashboard-card-link:focus-visible {
+    border-color: var(--cleture-primary);
+    box-shadow: 0 0 0 0.2rem rgb(0 135 95 / 10%);
+    outline: none;
+}
+
+.dashboard-card .dashboard-card-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.35rem;
+    color: var(--cleture-primary-deep);
+    letter-spacing: normal;
+    text-transform: none;
+}
+
+.organization-shell {
+    width: min(100% - 2rem, 58rem);
+    margin: 0 auto;
+    padding: clamp(2rem, 6vw, 4.5rem) 0;
+}
+
+.organization-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-bottom: 1.5rem;
+    color: var(--cleture-primary-deep);
+    font-size: 0.88rem;
+    font-weight: 750;
+    text-decoration: none;
+}
+
+.organization-back-link:hover {
+    text-decoration: underline;
+}
+
+.organization-hero {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding-bottom: 2rem;
+}
+
+.organization-hero h1 {
+    margin: 0.25rem 0 0.55rem;
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+}
+
+.organization-hero p:last-child {
+    max-width: 44rem;
+    margin: 0;
+    color: var(--cleture-muted);
+    line-height: 1.65;
+}
+
+.organization-card {
+    padding: clamp(1.25rem, 4vw, 2rem);
+    border: 1px solid var(--cleture-border);
+    border-radius: 0.8rem;
+    background: #fff;
+    box-shadow: 0 1rem 3rem rgb(24 71 57 / 7%);
+}
+
+.organization-card-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.organization-card-heading span {
+    color: var(--cleture-muted);
+    font-size: 0.75rem;
+    font-weight: 750;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.organization-card-heading h2 {
+    margin: 0.3rem 0 0;
+    font-size: 1.25rem;
+}
+
+.organization-card-heading > i {
+    color: var(--cleture-primary);
+    font-size: 1.35rem;
+}
+
+.organization-form {
+    display: grid;
+    gap: 1rem;
+}
+
 @media (max-width: 900px) {
     .auth-frame {
         width: min(100%, 34rem);
@@ -775,12 +1150,7 @@ h1 {
         grid-template-columns: 1fr;
     }
 
-    .app-header {
-        align-items: flex-start;
-    }
-
-    .test-badge,
-    .user-copy {
-        display: none;
+    .organization-shell {
+        width: min(100% - 1.25rem, 58rem);
     }
 }

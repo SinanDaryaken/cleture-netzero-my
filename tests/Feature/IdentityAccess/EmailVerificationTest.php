@@ -3,16 +3,19 @@
 namespace Tests\Feature\IdentityAccess;
 
 use App\Actions\IdentityAccess\AuthenticateOrganizationUser;
+use App\Localization\LocaleManager;
 use App\Models\OrganizationUser;
 use App\Models\ProcessingTask;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+use Tests\Concerns\InteractsWithLanguages;
 use Tests\TestCase;
 
 class EmailVerificationTest extends TestCase
 {
-    use DatabaseTransactions;
+    use DatabaseTransactions, InteractsWithLanguages;
 
     public function test_a_valid_worker_generated_token_verifies_the_email(): void
     {
@@ -54,8 +57,13 @@ class EmailVerificationTest extends TestCase
 
     public function test_resending_does_not_duplicate_an_active_processing_task(): void
     {
+        $this->ensureLanguage('tr', 'Türkçe', active: true, main: true);
+        $this->ensureLanguage('en', 'English', active: true);
         $user = OrganizationUser::factory()->unverified()->create();
-        $session = [AuthenticateOrganizationUser::SESSION_AUTH_VERSION => $user->auth_version];
+        $session = [
+            AuthenticateOrganizationUser::SESSION_AUTH_VERSION => $user->auth_version,
+            LocaleManager::SESSION_KEY => 'en',
+        ];
 
         $this->actingAs($user)->withSession($session)->post(route('verification.send'));
         $this->actingAs($user)->withSession($session)->post(route('verification.send'));
@@ -72,11 +80,69 @@ class EmailVerificationTest extends TestCase
             ->where('type', ProcessingTask::TYPE_EMAIL_VERIFICATION)
             ->firstOrFail();
 
-        $this->assertSame(1, $task->payload_version);
-        $this->assertSame([
-            'organizationUserId' => (string) $user->getKey(),
-        ], $task->payload);
+        $this->assertSame(2, $task->payload_version);
+        $this->assertIdentityMailPayload($task->payload, (string) $user->getKey(), 'en');
         $this->assertSame('pending', $task->status);
         $this->assertSame(0, $task->attempts);
+    }
+
+    public function test_resending_does_not_modify_an_active_version_two_task(): void
+    {
+        $this->ensureLanguage('tr', 'Türkçe', active: true, main: true);
+        $this->ensureLanguage('en', 'English', active: true);
+        $user = OrganizationUser::factory()->unverified()->create();
+        $availableAt = now()->subMinutes(2)->startOfSecond();
+        $dispatchedAt = now()->subMinute()->startOfSecond();
+        $claimedAt = now()->subSeconds(30)->startOfSecond();
+        $leaseExpiresAt = now()->addSeconds(30)->startOfSecond();
+        $task = new ProcessingTask;
+        $task->forceFill([
+            'type' => ProcessingTask::TYPE_EMAIL_VERIFICATION,
+            'payload_version' => 2,
+            'tenant_id' => null,
+            'payload' => [
+                'organizationUserId' => (string) $user->getKey(),
+                'locale' => 'tr',
+            ],
+            'dedupe_key' => ProcessingTask::TYPE_EMAIL_VERIFICATION.':'.$user->getKey(),
+            'status' => 'processing',
+            'attempts' => 2,
+            'available_at' => $availableAt,
+            'dispatched_at' => $dispatchedAt,
+            'dispatch_token' => (string) Str::uuid7(),
+            'claimed_at' => $claimedAt,
+            'lease_expires_at' => $leaseExpiresAt,
+            'claimed_by' => 'worker-1',
+        ]);
+        $task->save();
+        $task->refresh();
+        $originalAttributes = $task->getAttributes();
+        $session = [
+            AuthenticateOrganizationUser::SESSION_AUTH_VERSION => $user->auth_version,
+            LocaleManager::SESSION_KEY => 'en',
+        ];
+
+        $this->actingAs($user)->withSession($session)->post(route('verification.send'));
+
+        $task->refresh();
+
+        $this->assertSame($originalAttributes, $task->getAttributes());
+        $this->assertSame(
+            1,
+            ProcessingTask::query()
+                ->where('dedupe_key', ProcessingTask::TYPE_EMAIL_VERIFICATION.':'.$user->getKey())
+                ->count(),
+        );
+    }
+
+    /** @param  array<string, mixed>  $payload */
+    private function assertIdentityMailPayload(array $payload, string $organizationUserId, string $locale): void
+    {
+        $payloadKeys = array_keys($payload);
+        sort($payloadKeys);
+
+        $this->assertSame(['locale', 'organizationUserId'], $payloadKeys);
+        $this->assertSame($organizationUserId, $payload['organizationUserId']);
+        $this->assertSame($locale, $payload['locale']);
     }
 }

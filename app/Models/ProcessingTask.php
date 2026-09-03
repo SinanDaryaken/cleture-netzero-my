@@ -11,9 +11,11 @@ class ProcessingTask extends Model
 
     public const TYPE_EMAIL_VERIFICATION = 'organization-user.email-verification';
 
+    public const TYPE_PASSWORD_CHANGED = 'organization-user.password-changed';
+
     public const TYPE_PASSWORD_RESET = 'organization-user.password-reset';
 
-    public const IDENTITY_MAIL_PAYLOAD_VERSION = 1;
+    public const IDENTITY_MAIL_PAYLOAD_VERSION = 2;
 
     /**
      * @var list<string>

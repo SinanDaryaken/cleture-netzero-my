@@ -8,6 +8,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -42,6 +43,11 @@ class OrganizationUser extends Authenticatable implements MustVerifyEmail
     public static function normalizeEmail(string $email): string
     {
         return mb_strtolower(trim($email));
+    }
+
+    public function organization(): HasOne
+    {
+        return $this->hasOne(Organization::class);
     }
 
     /**

@@ -2,28 +2,42 @@
 
 namespace App\Actions\IdentityAccess;
 
+use App\Localization\LocaleManager;
 use App\Models\OrganizationUser;
 use App\Models\ProcessingTask;
 
 class EnqueueOrganizationUserMail
 {
-    public function emailVerification(OrganizationUser $user): ProcessingTask
+    public function __construct(private readonly LocaleManager $locales) {}
+
+    public function emailVerification(OrganizationUser $user, string $locale): ProcessingTask
     {
         return $this->enqueue(
             user: $user,
             type: ProcessingTask::TYPE_EMAIL_VERIFICATION,
+            locale: $locale,
         );
     }
 
-    public function passwordReset(OrganizationUser $user): ProcessingTask
+    public function passwordReset(OrganizationUser $user, string $locale): ProcessingTask
     {
         return $this->enqueue(
             user: $user,
             type: ProcessingTask::TYPE_PASSWORD_RESET,
+            locale: $locale,
         );
     }
 
-    private function enqueue(OrganizationUser $user, string $type): ProcessingTask
+    public function passwordChanged(OrganizationUser $user, string $locale): ProcessingTask
+    {
+        return $this->enqueue(
+            user: $user,
+            type: ProcessingTask::TYPE_PASSWORD_CHANGED,
+            locale: $locale,
+        );
+    }
+
+    private function enqueue(OrganizationUser $user, string $type, string $locale): ProcessingTask
     {
         return ProcessingTask::query()->firstOrCreate(
             ['dedupe_key' => $type.':'.$user->getKey()],
@@ -33,6 +47,7 @@ class EnqueueOrganizationUserMail
                 'tenant_id' => null,
                 'payload' => [
                     'organizationUserId' => (string) $user->getKey(),
+                    'locale' => $this->locales->identityMailLocale($locale),
                 ],
                 'status' => 'pending',
                 'attempts' => 0,

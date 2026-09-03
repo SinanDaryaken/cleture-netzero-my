@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\OrganizationUser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 
 class EmailVerificationNotificationController extends Controller
 {
@@ -20,7 +21,7 @@ class EmailVerificationNotificationController extends Controller
             return redirect()->route('dashboard');
         }
 
-        $mailTasks->emailVerification($user);
+        $mailTasks->emailVerification($user, App::currentLocale());
 
         return back()->with(
             'status',

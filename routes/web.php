@@ -9,6 +9,7 @@ use App\Http\Controllers\IdentityAccess\NewPasswordController;
 use App\Http\Controllers\IdentityAccess\PasswordResetLinkController;
 use App\Http\Controllers\IdentityAccess\RegisteredOrganizationUserController;
 use App\Http\Controllers\Localization\LocaleController;
+use App\Http\Controllers\Organizations\OrganizationController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/login')->name('home');
@@ -60,4 +61,13 @@ Route::middleware(['auth', 'auth.version'])->group(function (): void {
     Route::get('/dashboard', DashboardController::class)
         ->middleware('verified')
         ->name('dashboard');
+
+    Route::middleware('verified')->group(function (): void {
+        Route::get('/organization', [OrganizationController::class, 'show'])
+            ->name('organization.show');
+        Route::post('/organization', [OrganizationController::class, 'store'])
+            ->name('organization.store');
+        Route::patch('/organization', [OrganizationController::class, 'update'])
+            ->name('organization.update');
+    });
 });

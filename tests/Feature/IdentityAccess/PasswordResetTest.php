@@ -2,24 +2,33 @@
 
 namespace Tests\Feature\IdentityAccess;
 
+use App\Actions\IdentityAccess\EnqueueOrganizationUserMail;
+use App\Actions\IdentityAccess\ResetOrganizationUserPassword;
+use App\Localization\LocaleManager;
 use App\Models\OrganizationUser;
 use App\Models\ProcessingTask;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
+use RuntimeException;
+use Tests\Concerns\InteractsWithLanguages;
 use Tests\TestCase;
 
 class PasswordResetTest extends TestCase
 {
-    use DatabaseTransactions;
+    use DatabaseTransactions, InteractsWithLanguages;
 
     public function test_a_known_email_enqueues_a_secret_free_password_reset_task(): void
     {
+        $this->ensureLanguage('tr', 'Türkçe', active: true, main: true);
+        $this->ensureLanguage('en', 'English', active: true);
         $user = OrganizationUser::factory()->create(['email' => 'sinan@example.com']);
 
-        $response = $this->post(route('password.email'), [
-            'email' => ' SINAN@EXAMPLE.COM ',
-        ]);
+        $response = $this->withSession([LocaleManager::SESSION_KEY => 'en'])
+            ->post(route('password.email'), [
+                'email' => ' SINAN@EXAMPLE.COM ',
+            ]);
 
         $response->assertSessionHas(
             'status',
@@ -30,18 +39,14 @@ class PasswordResetTest extends TestCase
             ->where('type', ProcessingTask::TYPE_PASSWORD_RESET)
             ->firstOrFail();
 
-        $this->assertSame(
-            [
-                'organizationUserId' => (string) $user->getKey(),
-            ],
+        $this->assertIdentityMailPayload(
             $task->payload,
+            (string) $user->getKey(),
+            'en',
         );
-        $this->assertSame(1, $task->payload_version);
+        $this->assertSame(2, $task->payload_version);
         $this->assertSame('pending', $task->status);
         $this->assertSame(0, $task->attempts);
-        $this->assertArrayNotHasKey('email', $task->payload);
-        $this->assertArrayNotHasKey('token', $task->payload);
-        $this->assertArrayNotHasKey('password', $task->payload);
     }
 
     public function test_an_unknown_email_receives_the_same_generic_response(): void
@@ -62,17 +67,28 @@ class PasswordResetTest extends TestCase
     public function test_an_existing_active_reset_task_is_not_duplicated_or_modified(): void
     {
         $user = OrganizationUser::factory()->create(['email' => 'sinan@example.com']);
-        $availableAt = now()->subMinute()->startOfSecond();
-        $task = ProcessingTask::query()->create([
+        $availableAt = now()->subMinutes(2)->startOfSecond();
+        $dispatchedAt = now()->subMinute()->startOfSecond();
+        $dispatchToken = (string) Str::uuid7();
+        $task = new ProcessingTask;
+        $task->forceFill([
             'type' => ProcessingTask::TYPE_PASSWORD_RESET,
-            'payload_version' => ProcessingTask::IDENTITY_MAIL_PAYLOAD_VERSION,
+            'payload_version' => 1,
             'tenant_id' => null,
             'payload' => ['organizationUserId' => (string) $user->getKey()],
             'dedupe_key' => ProcessingTask::TYPE_PASSWORD_RESET.':'.$user->getKey(),
-            'status' => 'pending',
+            'status' => 'queued',
             'attempts' => 0,
             'available_at' => $availableAt,
+            'dispatched_at' => $dispatchedAt,
+            'dispatch_token' => $dispatchToken,
+            'claimed_at' => null,
+            'lease_expires_at' => null,
+            'claimed_by' => null,
         ]);
+        $task->save();
+        $task->refresh();
+        $originalAttributes = $task->getAttributes();
 
         $this->post(route('password.email'), [
             'email' => $user->email,
@@ -80,18 +96,25 @@ class PasswordResetTest extends TestCase
 
         $task->refresh();
 
-        $this->assertSame(1, $task->payload_version);
-        $this->assertSame([
-            'organizationUserId' => (string) $user->getKey(),
-        ], $task->payload);
-        $this->assertSame('pending', $task->status);
-        $this->assertSame(0, $task->attempts);
-        $this->assertTrue($availableAt->equalTo($task->available_at));
+        $this->assertSame($originalAttributes, $task->getAttributes());
         $this->assertSame(1, ProcessingTask::query()->where('type', ProcessingTask::TYPE_PASSWORD_RESET)->count());
+    }
+
+    public function test_an_invalid_identity_mail_locale_uses_the_configured_fallback(): void
+    {
+        config(['app.fallback_locale' => 'tr']);
+        $user = OrganizationUser::factory()->create();
+
+        $task = $this->app->make(EnqueueOrganizationUserMail::class)
+            ->passwordReset($user, 'de-DE');
+
+        $this->assertIdentityMailPayload($task->payload, (string) $user->getKey(), 'tr');
     }
 
     public function test_a_valid_password_broker_token_resets_the_password_and_invalidates_old_sessions(): void
     {
+        $this->ensureLanguage('tr', 'Türkçe', active: true, main: true);
+        $this->ensureLanguage('en', 'English', active: true);
         $user = OrganizationUser::factory()->create([
             'email' => 'sinan@example.com',
             'password' => 'old-password',
@@ -99,12 +122,13 @@ class PasswordResetTest extends TestCase
         ]);
         $token = Password::broker('organization_users')->createToken($user);
 
-        $response = $this->post(route('password.update'), [
-            'email' => $user->email,
-            'token' => $token,
-            'password' => 'new-strong-password',
-            'password_confirmation' => 'new-strong-password',
-        ]);
+        $response = $this->withSession([LocaleManager::SESSION_KEY => 'tr'])
+            ->post(route('password.update'), [
+                'email' => $user->email,
+                'token' => $token,
+                'password' => 'new-strong-password',
+                'password_confirmation' => 'new-strong-password',
+            ]);
 
         $response->assertRedirect(route('login.create'));
 
@@ -114,6 +138,52 @@ class PasswordResetTest extends TestCase
         $this->assertSame(5, $user->auth_version);
         $this->assertDatabaseMissing('organization_user_password_reset_tokens', [
             'email' => $user->email,
+        ]);
+
+        $task = ProcessingTask::query()
+            ->where('type', ProcessingTask::TYPE_PASSWORD_CHANGED)
+            ->firstOrFail();
+
+        $this->assertSame(2, $task->payload_version);
+        $this->assertIdentityMailPayload($task->payload, (string) $user->getKey(), 'tr');
+        $this->assertSame('pending', $task->status);
+        $this->assertSame(0, $task->attempts);
+    }
+
+    public function test_password_and_password_changed_task_roll_back_when_task_creation_fails(): void
+    {
+        $user = OrganizationUser::factory()->create([
+            'email' => 'sinan@example.com',
+            'password' => 'old-password',
+            'auth_version' => 4,
+        ]);
+        $token = Password::broker('organization_users')->createToken($user);
+        ProcessingTask::created(function (): void {
+            throw new RuntimeException('Simulated processing task failure.');
+        });
+
+        try {
+            $this->app->make(ResetOrganizationUserPassword::class)->handle(
+                email: $user->email,
+                password: 'new-strong-password',
+                token: $token,
+                locale: 'en',
+            );
+
+            $this->fail('Password reset should fail when processing task creation fails.');
+        } catch (RuntimeException $exception) {
+            $this->assertSame('Simulated processing task failure.', $exception->getMessage());
+        }
+
+        $user->refresh();
+
+        $this->assertTrue(Hash::check('old-password', $user->password));
+        $this->assertSame(4, $user->auth_version);
+        $this->assertDatabaseHas('organization_user_password_reset_tokens', [
+            'email' => $user->email,
+        ]);
+        $this->assertDatabaseMissing('processing_tasks', [
+            'type' => ProcessingTask::TYPE_PASSWORD_CHANGED,
         ]);
     }
 
@@ -152,6 +222,9 @@ class PasswordResetTest extends TestCase
 
         $knownEmailResponse->assertSessionHasErrors(['email' => $expectedMessage]);
         $unknownEmailResponse->assertSessionHasErrors(['email' => $expectedMessage]);
+        $this->assertDatabaseMissing('processing_tasks', [
+            'type' => ProcessingTask::TYPE_PASSWORD_CHANGED,
+        ]);
     }
 
     public function test_reset_link_requests_are_rate_limited_per_normalized_email(): void
@@ -209,5 +282,16 @@ class PasswordResetTest extends TestCase
         $this->assertDatabaseHas('organization_user_password_reset_tokens', [
             'email' => $user->email,
         ]);
+    }
+
+    /** @param  array<string, mixed>  $payload */
+    private function assertIdentityMailPayload(array $payload, string $organizationUserId, string $locale): void
+    {
+        $payloadKeys = array_keys($payload);
+        sort($payloadKeys);
+
+        $this->assertSame(['locale', 'organizationUserId'], $payloadKeys);
+        $this->assertSame($organizationUserId, $payload['organizationUserId']);
+        $this->assertSame($locale, $payload['locale']);
     }
 }

@@ -12,12 +12,12 @@ class RegisterOrganizationUser
     /**
      * @param  array{name: string, email: string, password: string}  $attributes
      */
-    public function handle(array $attributes): OrganizationUser
+    public function handle(array $attributes, string $locale): OrganizationUser
     {
-        return DB::transaction(function () use ($attributes): OrganizationUser {
+        return DB::transaction(function () use ($attributes, $locale): OrganizationUser {
             $user = OrganizationUser::query()->create($attributes);
 
-            $this->mailTasks->emailVerification($user);
+            $this->mailTasks->emailVerification($user, $locale);
 
             return $user;
         });
