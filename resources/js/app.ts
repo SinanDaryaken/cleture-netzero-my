@@ -4,7 +4,9 @@ import '../css/app.css';
 import { createInertiaApp } from '@inertiajs/vue3';
 import Aura from '@primeuix/themes/aura';
 import { definePreset } from '@primeuix/themes';
+import ConfirmationService from 'primevue/confirmationservice';
 import PrimeVue from 'primevue/config';
+import ToastService from 'primevue/toastservice';
 import type { DefineComponent } from 'vue';
 import { createApp, h } from 'vue';
 
@@ -57,8 +59,15 @@ void createInertiaApp({
             .use(plugin)
             .use(PrimeVue, {
                 ripple: true,
-                theme: { preset: CletureTheme },
+                theme: {
+                    preset: CletureTheme,
+                    options: {
+                        darkModeSelector: 'none',
+                    },
+                },
             })
+            .use(ConfirmationService)
+            .use(ToastService)
             .mount(el);
     },
 });

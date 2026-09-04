@@ -1,15 +1,20 @@
 <script setup lang="ts">
 import { Link, router, usePage } from '@inertiajs/vue3';
 import Button from 'primevue/button';
+import ConfirmDialog from 'primevue/confirmdialog';
 import Select from 'primevue/select';
-import { onMounted, ref, watch } from 'vue';
+import Toast from 'primevue/toast';
+import { useToast } from 'primevue/usetoast';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
 
 import type { SharedPageProps } from '../modules/identity-access/types';
 import BrandMark from '../shared/components/BrandMark.vue';
 
 const navigationPreferencesVersion = 1;
 const page = usePage<SharedPageProps>();
+const toast = useToast();
 const sidebarCollapsed = ref(false);
+let removeSuccessListener: (() => void) | undefined;
 
 watch(
     () => page.props.localization.locale,
@@ -50,7 +55,29 @@ function selectLocale(locale: string | null): void {
     router.post('/locale', { locale }, { preserveScroll: true });
 }
 
+function showFlashMessage(message: string | null | undefined, severity: 'success' | 'error'): void {
+    if (!message) {
+        return;
+    }
+
+    toast.add({
+        severity,
+        detail: message,
+        life: 4500,
+    });
+}
+
+function showFlashMessages(): void {
+    showFlashMessage(page.props.flash.status, 'success');
+    showFlashMessage(page.props.flash.error, 'error');
+}
+
 onMounted(() => {
+    showFlashMessages();
+    removeSuccessListener = router.on('success', () => {
+        showFlashMessages();
+    });
+
     try {
         const saved = window.localStorage.getItem('cleture-my-navigation');
 
@@ -70,10 +97,17 @@ onMounted(() => {
         sidebarCollapsed.value = false;
     }
 });
+
+onUnmounted(() => {
+    removeSuccessListener?.();
+});
 </script>
 
 <template>
     <div class="app-shell" :class="{ 'app-shell-collapsed': sidebarCollapsed }">
+        <Toast position="bottom-right" />
+        <ConfirmDialog />
+
         <aside class="app-sidebar">
             <div class="sidebar-brand-row">
                 <Link
@@ -134,6 +168,75 @@ onMounted(() => {
                         {{ page.props.localization.translations.appLayout.organization }}
                     </span>
                 </Link>
+
+                <template v-if="page.props.auth.tenant?.available">
+                    <span class="app-navigation-section-label navigation-text">
+                        {{ page.props.localization.translations.appLayout.tenantManagement }}
+                    </span>
+                    <Link
+                        href="/tenant/users"
+                        class="app-navigation-link"
+                        :class="{ 'app-navigation-link-active': isCurrentRoute('/tenant/users') }"
+                        :aria-current="isCurrentRoute('/tenant/users') ? 'page' : undefined"
+                        :title="
+                            sidebarCollapsed
+                                ? page.props.localization.translations.appLayout.tenantUsers
+                                : undefined
+                        "
+                    >
+                        <i class="pi pi-users" aria-hidden="true"></i>
+                        <span class="navigation-text">
+                            {{ page.props.localization.translations.appLayout.tenantUsers }}
+                        </span>
+                    </Link>
+                    <Link
+                        href="/tenant/organizational-units"
+                        class="app-navigation-link"
+                        :class="{
+                            'app-navigation-link-active': isCurrentRoute(
+                                '/tenant/organizational-units',
+                            ),
+                        }"
+                        :aria-current="
+                            isCurrentRoute('/tenant/organizational-units') ? 'page' : undefined
+                        "
+                        :title="
+                            sidebarCollapsed
+                                ? page.props.localization.translations.appLayout.organizationalUnits
+                                : undefined
+                        "
+                    >
+                        <i class="pi pi-sitemap" aria-hidden="true"></i>
+                        <span class="navigation-text">
+                            {{ page.props.localization.translations.appLayout.organizationalUnits }}
+                        </span>
+                    </Link>
+                    <Link
+                        href="/tenant/organization-unit-types"
+                        class="app-navigation-link"
+                        :class="{
+                            'app-navigation-link-active': isCurrentRoute(
+                                '/tenant/organization-unit-types',
+                            ),
+                        }"
+                        :aria-current="
+                            isCurrentRoute('/tenant/organization-unit-types') ? 'page' : undefined
+                        "
+                        :title="
+                            sidebarCollapsed
+                                ? page.props.localization.translations.appLayout
+                                      .organizationUnitTypes
+                                : undefined
+                        "
+                    >
+                        <i class="pi pi-tags" aria-hidden="true"></i>
+                        <span class="navigation-text">
+                            {{
+                                page.props.localization.translations.appLayout.organizationUnitTypes
+                            }}
+                        </span>
+                    </Link>
+                </template>
             </nav>
 
             <div class="sidebar-account">

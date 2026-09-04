@@ -11,11 +11,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Stancl\Tenancy\Database\Concerns\CentralConnection;
 
 class OrganizationUser extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<OrganizationUserFactory> */
-    use HasFactory, HasUuids, MustVerifyEmailTrait, Notifiable;
+    use CentralConnection, HasFactory, HasUuids, MustVerifyEmailTrait, Notifiable;
 
     /**
      * @var array<string, mixed>

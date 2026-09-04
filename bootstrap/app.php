@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\AddSecurityHeaders;
 use App\Http\Middleware\EnsureCurrentAuthenticationVersion;
+use App\Http\Middleware\InitializeAvailableTenant;
 use App\Http\Middleware\SetApplicationLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -24,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'auth.version' => EnsureCurrentAuthenticationVersion::class,
+            'tenant.available' => InitializeAvailableTenant::class,
         ]);
 
         $middleware->redirectGuestsTo(fn (): string => route('login.create'));

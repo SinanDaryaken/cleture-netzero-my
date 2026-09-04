@@ -18,12 +18,18 @@ class OrganizationController extends Controller
         /** @var OrganizationUser $user */
         $user = $request->user();
 
-        $organization = $user->organization()->first();
+        $organization = $user->organization()->with('tenant')->first();
 
         return Inertia::render('organizations/Organization', [
             'organization' => $organization === null ? null : [
                 'name' => $organization->name,
                 'taxNumber' => $organization->tax_number,
+                'netZeroRequested' => $organization->netzero_requested,
+                'tenant' => $organization->tenant === null ? null : [
+                    'provisioningStatus' => $organization->tenant->provisioning_status->value,
+                    'active' => $organization->tenant->active,
+                    'available' => $organization->tenant->isAvailable(),
+                ],
             ],
         ]);
     }

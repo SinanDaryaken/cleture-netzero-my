@@ -9,7 +9,11 @@ use App\Http\Controllers\IdentityAccess\NewPasswordController;
 use App\Http\Controllers\IdentityAccess\PasswordResetLinkController;
 use App\Http\Controllers\IdentityAccess\RegisteredOrganizationUserController;
 use App\Http\Controllers\Localization\LocaleController;
+use App\Http\Controllers\Organizations\NetZeroProvisioningController;
 use App\Http\Controllers\Organizations\OrganizationController;
+use App\Http\Controllers\Tenant\OrganizationalUnitController;
+use App\Http\Controllers\Tenant\OrganizationUnitTypeController;
+use App\Http\Controllers\Tenant\TenantUserController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/login')->name('home');
@@ -69,5 +73,52 @@ Route::middleware(['auth', 'auth.version'])->group(function (): void {
             ->name('organization.store');
         Route::patch('/organization', [OrganizationController::class, 'update'])
             ->name('organization.update');
+        Route::post('/organization/netzero-provisioning', NetZeroProvisioningController::class)
+            ->middleware('throttle:5,1')
+            ->name('organization.netzero-provisioning.store');
+
+        Route::middleware('tenant.available')
+            ->prefix('tenant')
+            ->name('tenant.')
+            ->group(function (): void {
+                Route::get('/users', [TenantUserController::class, 'index'])
+                    ->name('users.index');
+                Route::post('/users', [TenantUserController::class, 'store'])
+                    ->name('users.store');
+                Route::patch('/users/{tenantUser}', [TenantUserController::class, 'update'])
+                    ->whereUuid('tenantUser')
+                    ->name('users.update');
+                Route::delete('/users/{tenantUser}', [TenantUserController::class, 'destroy'])
+                    ->whereUuid('tenantUser')
+                    ->name('users.destroy');
+
+                Route::get('/organization-unit-types', [OrganizationUnitTypeController::class, 'index'])
+                    ->name('organization-unit-types.index');
+                Route::post('/organization-unit-types', [OrganizationUnitTypeController::class, 'store'])
+                    ->name('organization-unit-types.store');
+                Route::patch(
+                    '/organization-unit-types/{organizationUnitType}',
+                    [OrganizationUnitTypeController::class, 'update'],
+                )
+                    ->whereUuid('organizationUnitType')
+                    ->name('organization-unit-types.update');
+                Route::delete(
+                    '/organization-unit-types/{organizationUnitType}',
+                    [OrganizationUnitTypeController::class, 'destroy'],
+                )
+                    ->whereUuid('organizationUnitType')
+                    ->name('organization-unit-types.destroy');
+
+                Route::get('/organizational-units', [OrganizationalUnitController::class, 'index'])
+                    ->name('organizational-units.index');
+                Route::post('/organizational-units', [OrganizationalUnitController::class, 'store'])
+                    ->name('organizational-units.store');
+                Route::patch(
+                    '/organizational-units/{organizationalUnit}',
+                    [OrganizationalUnitController::class, 'update'],
+                )
+                    ->whereUuid('organizationalUnit')
+                    ->name('organizational-units.update');
+            });
     });
 });

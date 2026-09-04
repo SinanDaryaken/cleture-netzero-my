@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
+use Stancl\Tenancy\Database\Concerns\CentralConnection;
 
 class ProcessingTask extends Model
 {
-    use HasUuids;
+    use CentralConnection, HasUuids;
 
     public const TYPE_EMAIL_VERIFICATION = 'organization-user.email-verification';
 
@@ -15,7 +16,11 @@ class ProcessingTask extends Model
 
     public const TYPE_PASSWORD_RESET = 'organization-user.password-reset';
 
+    public const TYPE_TENANT_PROVISION = 'tenant.provision';
+
     public const IDENTITY_MAIL_PAYLOAD_VERSION = 2;
+
+    public const TENANT_PROVISION_PAYLOAD_VERSION = 1;
 
     /**
      * @var list<string>

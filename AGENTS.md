@@ -17,6 +17,13 @@ Before relying on a package's API, confirm its installed version:
 
 This project has domain-specific skills available in `**/skills/**`. You MUST activate the relevant skill whenever you work in that domain—don't wait until you're stuck.
 
+## Incoming Agent Work
+
+- Treat work received from another agent as a proposal that requires review before implementation. First analyze its scope, assumptions, contracts, dependencies, project rules, and effect on the receiving module.
+- Implement the work only when the analysis shows that it is compatible, sufficiently specified, and belongs in this module. Verify the resulting change with the narrowest relevant checks.
+- If the work is unsuitable or incomplete, do not implement it or compensate for defects in the originating agent's module. Return the concrete deficiencies, incompatibilities, and acceptance criteria to the agent that submitted the work.
+- Frame that response as review feedback, not as a direct command to execute a fix. The originating agent owns analyzing and correcting its module, then must resubmit the revised work for a new suitability review.
+
 ## Conventions
 
 - You must follow all existing code conventions used in this application. When creating or editing a file, check sibling files for the correct structure, approach, and naming.

@@ -1,16 +1,21 @@
 <script setup lang="ts">
-import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { Head, Link, useForm, usePage, usePoll } from '@inertiajs/vue3';
+import { computed, watch } from 'vue';
 
 import AppLayout from '../../../layouts/AppLayout.vue';
 import FormField from '../../../shared/components/FormField.vue';
-import StatusMessage from '../../../shared/components/StatusMessage.vue';
 import SubmitButton from '../../../shared/components/SubmitButton.vue';
 import type { SharedPageProps } from '../../identity-access/types';
 
 type Organization = {
     name: string;
     taxNumber: string;
+    netZeroRequested: boolean;
+    tenant: {
+        provisioningStatus: 'pending' | 'provisioning' | 'ready' | 'failed';
+        active: boolean;
+        available: boolean;
+    } | null;
 };
 
 const props = defineProps<{
@@ -22,6 +27,32 @@ const form = useForm({
     name: props.organization?.name ?? '',
     tax_number: props.organization?.taxNumber ?? '',
 });
+const provisioningForm = useForm({});
+const provisioningStatus = computed(() => props.organization?.tenant?.provisioningStatus ?? null);
+const provisioningInProgress = computed(
+    () => provisioningStatus.value === 'pending' || provisioningStatus.value === 'provisioning',
+);
+const { start: startProvisioningPoll, stop: stopProvisioningPoll } = usePoll(
+    2_000,
+    {
+        only: ['organization'],
+        showProgress: false,
+    },
+    {
+        autoStart: provisioningInProgress.value,
+        mode: 'rest',
+    },
+);
+
+watch(provisioningInProgress, (inProgress) => {
+    if (inProgress) {
+        startProvisioningPoll();
+
+        return;
+    }
+
+    stopProvisioningPoll();
+});
 
 function submit(): void {
     if (hasOrganization.value) {
@@ -31,6 +62,10 @@ function submit(): void {
     }
 
     form.post('/organization', { preserveScroll: true });
+}
+
+function requestNetZero(): void {
+    provisioningForm.post('/organization/netzero-provisioning', { preserveScroll: true });
 }
 </script>
 
@@ -67,8 +102,6 @@ function submit(): void {
                     <i class="pi pi-shield" aria-hidden="true"></i>
                 </div>
 
-                <StatusMessage :message="page.props.flash.status" />
-
                 <form class="organization-form" @submit.prevent="submit">
                     <FormField
                         id="organization-name"
@@ -100,6 +133,52 @@ function submit(): void {
                         :processing="form.processing"
                     />
                 </form>
+
+                <section v-if="hasOrganization" class="netzero-provisioning">
+                    <div>
+                        <p class="netzero-provisioning-title">
+                            {{ page.props.localization.translations.organization.netZeroTitle }}
+                        </p>
+                        <p class="netzero-provisioning-description">
+                            {{
+                                page.props.localization.translations.organization.netZeroDescription
+                            }}
+                        </p>
+                    </div>
+
+                    <div
+                        v-if="provisioningStatus"
+                        class="netzero-provisioning-status"
+                        role="status"
+                        aria-live="polite"
+                        aria-atomic="true"
+                    >
+                        <span>{{
+                            page.props.localization.translations.organization.netZeroStatusLabel
+                        }}</span>
+                        <strong>
+                            {{
+                                page.props.localization.translations.organization.netZeroStatuses[
+                                    provisioningStatus
+                                ]
+                            }}
+                        </strong>
+                    </div>
+
+                    <form v-else @submit.prevent="requestNetZero">
+                        <SubmitButton
+                            icon="pi pi-sparkles"
+                            :label="
+                                page.props.localization.translations.organization
+                                    .netZeroRequestSubmit
+                            "
+                            :processing-label="
+                                page.props.localization.translations.organization.netZeroRequesting
+                            "
+                            :processing="provisioningForm.processing"
+                        />
+                    </form>
+                </section>
             </section>
         </main>
     </AppLayout>
