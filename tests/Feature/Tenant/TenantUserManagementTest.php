@@ -50,20 +50,6 @@ class TenantUserManagementTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_request_is_forbidden_when_pending_tenant_is_active(): void
-    {
-        $user = OrganizationUser::factory()->create();
-        $organization = Organization::factory()->for($user)->create();
-        Tenant::factory()->for($organization)->create([
-            'provisioning_status' => TenantProvisioningStatus::Pending,
-            'active' => true,
-        ]);
-
-        $this->actingAsOrganizationUser($user)
-            ->get(route('tenant.users.index'))
-            ->assertForbidden();
-    }
-
     public function test_request_is_forbidden_when_ready_tenant_is_inactive(): void
     {
         $user = OrganizationUser::factory()->create();

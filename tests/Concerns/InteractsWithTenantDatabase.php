@@ -15,8 +15,6 @@ trait InteractsWithTenantDatabase
 
     protected function configureTenantDatabaseTesting(): void
     {
-        $this->ensureCentralTenantSchemaExists();
-
         config([
             'database.connections.tenant_testing' => [
                 'driver' => 'sqlite',
@@ -34,32 +32,6 @@ trait InteractsWithTenantDatabase
                 (string) $tenant->getTenantKey(),
             ).'.sqlite',
         );
-    }
-
-    private function ensureCentralTenantSchemaExists(): void
-    {
-        $centralSchema = Schema::connection((string) config('tenancy.database.central_connection'));
-
-        if (! $centralSchema->hasColumn('organizations', 'netzero_requested')) {
-            $centralSchema->table('organizations', function (Blueprint $table): void {
-                $table->boolean('netzero_requested')->default(false);
-            });
-        }
-
-        if (! $centralSchema->hasTable('tenants')) {
-            $centralSchema->create('tenants', function (Blueprint $table): void {
-                $table->uuid('id')->primary();
-                $table->foreignUuid('organization_id')
-                    ->unique()
-                    ->constrained()
-                    ->restrictOnUpdate()
-                    ->restrictOnDelete();
-                $table->string('provisioning_status')->default('pending');
-                $table->boolean('active')->default(false);
-                $table->string('schema_version')->nullable();
-                $table->timestampsTz();
-            });
-        }
     }
 
     protected function createTenantDatabase(Tenant $tenant): void
