@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Organizations;
 
+use App\Actions\Organizations\CreateOrganization;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Organizations\StoreOrganizationRequest;
 use App\Http\Requests\Organizations\UpdateOrganizationRequest;
@@ -34,12 +35,12 @@ class OrganizationController extends Controller
         ]);
     }
 
-    public function store(StoreOrganizationRequest $request): RedirectResponse
+    public function store(StoreOrganizationRequest $request, CreateOrganization $createOrganization): RedirectResponse
     {
         /** @var OrganizationUser $user */
         $user = $request->user();
 
-        $user->organization()->create($request->validated());
+        $createOrganization->handle($user, $request->validated());
 
         return redirect()->route('organization.show')->with(
             'status',

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Stancl\Tenancy\Database\Concerns\CentralConnection;
 
@@ -26,6 +27,12 @@ class Organization extends Model
     public function tenant(): HasOne
     {
         return $this->hasOne(Tenant::class);
+    }
+
+    /** @return HasMany<OrganizationEntitlement, $this> */
+    public function entitlements(): HasMany
+    {
+        return $this->hasMany(OrganizationEntitlement::class);
     }
 
     public function organizationUser(): BelongsTo

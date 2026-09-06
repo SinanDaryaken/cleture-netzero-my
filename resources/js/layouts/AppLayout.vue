@@ -168,6 +168,22 @@ onUnmounted(() => {
                         {{ page.props.localization.translations.appLayout.organization }}
                     </span>
                 </Link>
+                <Link
+                    href="/products"
+                    class="app-navigation-link"
+                    :class="{ 'app-navigation-link-active': isCurrentRoute('/products') }"
+                    :aria-current="isCurrentRoute('/products') ? 'page' : undefined"
+                    :title="
+                        sidebarCollapsed
+                            ? page.props.localization.translations.appLayout.products
+                            : undefined
+                    "
+                >
+                    <i class="pi pi-box" aria-hidden="true"></i>
+                    <span class="navigation-text">
+                        {{ page.props.localization.translations.appLayout.products }}
+                    </span>
+                </Link>
 
                 <template v-if="page.props.auth.tenant?.available">
                     <span class="app-navigation-section-label navigation-text">

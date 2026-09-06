@@ -11,6 +11,8 @@ use App\Http\Controllers\IdentityAccess\RegisteredOrganizationUserController;
 use App\Http\Controllers\Localization\LocaleController;
 use App\Http\Controllers\Organizations\NetZeroProvisioningController;
 use App\Http\Controllers\Organizations\OrganizationController;
+use App\Http\Controllers\Products\ProductController;
+use App\Http\Controllers\Products\ProductPurchaseController;
 use App\Http\Controllers\Tenant\OrganizationalUnitController;
 use App\Http\Controllers\Tenant\OrganizationUnitTypeController;
 use App\Http\Controllers\Tenant\TenantUserController;
@@ -76,6 +78,13 @@ Route::middleware(['auth', 'auth.version'])->group(function (): void {
         Route::post('/organization/netzero-provisioning', NetZeroProvisioningController::class)
             ->middleware('throttle:5,1')
             ->name('organization.netzero-provisioning.store');
+
+        Route::get('/products', [ProductController::class, 'index'])
+            ->name('products.index');
+        Route::post('/products/{product}/purchase', [ProductPurchaseController::class, 'store'])
+            ->middleware('throttle:10,1')
+            ->whereUuid('product')
+            ->name('products.purchase');
 
         Route::middleware('tenant.available')
             ->prefix('tenant')

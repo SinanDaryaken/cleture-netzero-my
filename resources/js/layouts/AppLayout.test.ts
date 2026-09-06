@@ -41,6 +41,7 @@ vi.mock('@inertiajs/vue3', () => ({
                         navigationLabel: 'Ana gezinme',
                         overview: 'Genel Bakış',
                         organization: 'Organizasyon',
+                        products: 'Ürünler',
                         tenantManagement: 'Tenant yönetimi',
                         tenantUsers: 'Kullanıcılar',
                         organizationalUnits: 'Organizasyon Birimleri',
@@ -96,6 +97,7 @@ describe('AppLayout tenant navigation', () => {
     it('hides tenant modules while the tenant is unavailable', () => {
         const wrapper = mountLayout();
 
+        expect(wrapper.get('a[href="/products"]').text()).toContain('Ürünler');
         expect(wrapper.find('a[href="/tenant/users"]').exists()).toBe(false);
         expect(wrapper.find('a[href="/tenant/organizational-units"]').exists()).toBe(false);
         expect(wrapper.find('a[href="/tenant/organization-unit-types"]').exists()).toBe(false);

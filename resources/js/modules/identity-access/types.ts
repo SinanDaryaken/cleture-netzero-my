@@ -45,6 +45,7 @@ export type UiTranslations = {
         navigationLabel: string;
         overview: string;
         organization: string;
+        products: string;
         tenantManagement: string;
         tenantUsers: string;
         organizationUnitTypes: string;
@@ -149,6 +150,56 @@ export type UiTranslations = {
             provisioning: string;
             ready: string;
             failed: string;
+        };
+    };
+    products: {
+        headTitle: string;
+        eyebrow: string;
+        title: string;
+        description: string;
+        organizationLabel: string;
+        ownedTitle: string;
+        ownedDescription: string;
+        ownedBadge: string;
+        ownedEmpty: string;
+        ownedEmptyHint: string;
+        availableTitle: string;
+        availableDescription: string;
+        availableBadge: string;
+        availableEmpty: string;
+        availableEmptyHint: string;
+        organizationRequired: string;
+        purchase: string;
+        purchaseUnavailable: string;
+        startsAt: string;
+        endsAt: string;
+        dateNotSet: string;
+        annualPrice: string;
+        historyTitle: string;
+        historyDescription: string;
+        historyProduct: string;
+        purchasedAt: string;
+        historyAmount: string;
+        historyEmpty: string;
+        previous: string;
+        next: string;
+        purchaseTitle: string;
+        period: string;
+        oneYear: string;
+        paymentNotice: string;
+        cancel: string;
+        continuePayment: string;
+        purchasing: string;
+        purchased: string;
+        statuses: {
+            active: string;
+            suspended: string;
+            expired: string;
+        };
+        types: {
+            module: string;
+            addon: string;
+            application: string;
         };
     };
     tenantUsers: {

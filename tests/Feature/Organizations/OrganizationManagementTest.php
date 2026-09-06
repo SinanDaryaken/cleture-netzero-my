@@ -7,11 +7,12 @@ use App\Models\Organization;
 use App\Models\OrganizationUser;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Inertia\Testing\AssertableInertia;
+use Tests\Concerns\InteractsWithProducts;
 use Tests\TestCase;
 
 class OrganizationManagementTest extends TestCase
 {
-    use DatabaseTransactions;
+    use DatabaseTransactions, InteractsWithProducts;
 
     public function test_unauthenticated_user_is_redirected_to_login(): void
     {
@@ -38,7 +39,19 @@ class OrganizationManagementTest extends TestCase
 
     public function test_verified_user_can_create_one_organization(): void
     {
+        $this->freezeTime();
         $user = OrganizationUser::factory()->create();
+        $this->createProduct(
+            'netzero-carbon',
+            active: true,
+            purchasable: false,
+            priceAmount: '0.00',
+        );
+        $this->createProduct(
+            'inactive-product',
+            active: false,
+        );
+        $this->createProduct('optional-product');
 
         $response = $this->actingAsOrganizationUser($user)->post(route('organization.store'), [
             'name' => '  Cleture Teknoloji  ',
@@ -51,6 +64,10 @@ class OrganizationManagementTest extends TestCase
             'organization_user_id' => $user->getKey(),
             'name' => 'Cleture Teknoloji',
             'tax_number' => '1234567890',
+        ]);
+        $organizationId = $user->organization()->valueOrFail('id');
+        $this->assertDatabaseMissing('organization_entitlements', [
+            'organization_id' => $organizationId,
         ]);
     }
 
